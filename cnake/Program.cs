@@ -7,69 +7,69 @@ namespace cnake
     class Program
     {
         public static Snake S;
-        static void Main(string[] args)
+        static void Main()
         {
             Console.SetWindowSize(80, 20);
             Console.CursorVisible = false;
 
             S = new Snake();
-            while (S.alive) { S.Run(); }
+            while (S.Alive) { S.Run(); }
         }
     }
 
     class Snake
     {
-        public static List<Vector2> LBody = new List<Vector2>();
-        public static Vector2 vDir = new Vector2(2, 0);
-        public static Vector2 vFood = Food();
-        public bool alive = true;
+        public static List<Vector2> Body = [];
+        public static Vector2 Dir = new(2, 0);
+        public static Vector2 Food = NewFood();
+        public bool Alive = true;
 
-        static Snake() { for (int i = 3; i >= 0; i--) { LBody.Add(new Vector2(i, 0)); } }
+        static Snake() { for (var i = 3; i >= 0; i--) { Body.Add(new Vector2(i, 0)); } }
 
-        public static Vector2 Food()
+        public static Vector2 NewFood()
         {
-            Random R = new Random();
-            int X = R.Next(0, Console.WindowWidth);
-            while (X % 2 == 0) { X = R.Next(0, Console.WindowWidth); }
-            return new Vector2(X, R.Next(0, Console.WindowHeight));
+            Random r = new();
+            var x = r.Next(0, Console.WindowWidth);
+            while (x % 2 == 0) { x = r.Next(0, Console.WindowWidth); }
+            return new Vector2(x, r.Next(0, Console.WindowHeight));
         }
 
         public void Run()
         {
 
-            /* Move Body pieces to their next position */
-            for (int i = LBody.Count - 1; i > 0; i--) { LBody[i] = LBody[i - 1]; }
+            // Move Body pieces to their next position
+            for (var i = Body.Count - 1; i > 0; i--) { Body[i] = Body[i - 1]; }
 
-            /* Update head position */
-            LBody[0] = new Vector2(Mod((LBody[0].X + vDir.X), Console.WindowWidth), Mod((LBody[0].Y + vDir.Y), Console.WindowHeight));
+            // Update head position
+            Body[0] = new Vector2(Mod((Body[0].X + Dir.X), Console.WindowWidth), Mod((Body[0].Y + Dir.Y), Console.WindowHeight));
 
-            /* Render Body pieces at their respective position */
-            LBody.ForEach(b => { DrawPiece(b, ConsoleColor.White); });
+            // Render Body pieces at their respective position
+            Body.ForEach(b => { DrawPiece(b, ConsoleColor.White); });
 
-            /* Clear Trail by drawing last piece in black (This way Console.Clear is not needed), draw Food */
-            DrawPiece(LBody[LBody.Count - 1], ConsoleColor.Black);
-            DrawPiece(vFood, ConsoleColor.Red);
+            // Clear Trail by drawing last piece in black (This way Console.Clear is not needed), draw Food
+            DrawPiece(Body[^1], ConsoleColor.Black);
+            DrawPiece(Food, ConsoleColor.Red);
 
-            /* Check game rules */
-            for (int i = 0; i < LBody.Count; i++) 
+            // Check game rules
+            for (var i = 0; i < Body.Count; i++) 
             { 
-                for (int j = 0; j < LBody.Count; j++) 
+                for (var j = 0; j < Body.Count; j++) 
                 { 
-                    if (i != j && Vector2.Equals(LBody[i], LBody[j])) { alive = false; } 
+                    if (i != j && Vector2.Equals(Body[i], Body[j])) { Alive = false; } 
                 } 
-            } 
-
-            /* Check if Food was eaten */
-            if ((LBody[0].X == vFood.X || LBody[0].X == vFood.X + 1) && (LBody[0].Y == vFood.Y))
-            {
-                LBody.Add(LBody[LBody.Count - 1]);
-                vFood = Food();
             }
 
-            /* Delay the next frame */
-            DateTime dtThen = DateTime.Now;
-            bool xNewInput = false;
-            do { if (!xNewInput) { xNewInput = Controls(); } } while (dtThen.AddMilliseconds(100) > DateTime.Now);
+            // Check if Food was eaten
+            if ((Body[0].X == Food.X || Body[0].X == Food.X + 1) && (Body[0].Y == Food.Y))
+            {
+                Body.Add(Body[^1]);
+                Food = NewFood();
+            }
+
+            // Delay the next frame
+            var start = DateTime.Now;
+            var newInput = false;
+            do { if (!newInput) { newInput = Controls(); } } while (start.AddMilliseconds(100) > DateTime.Now);
         }
 
         public static bool Controls()
@@ -78,18 +78,18 @@ namespace cnake
             {
                 switch (Console.ReadKey().Key)
                 {
-                    case ConsoleKey.LeftArrow:  case ConsoleKey.A: if (vDir.Length() != 2) { vDir = new Vector2(-2,  0); } return true;
-                    case ConsoleKey.UpArrow:    case ConsoleKey.W: if (vDir.Length() != 1) { vDir = new Vector2( 0, -1); } return true;
-                    case ConsoleKey.RightArrow: case ConsoleKey.D: if (vDir.Length() != 2) { vDir = new Vector2( 2,  0); } return true;
-                    case ConsoleKey.DownArrow:  case ConsoleKey.S: if (vDir.Length() != 1) { vDir = new Vector2( 0,  1); } return true;
+                    case ConsoleKey.LeftArrow:  case ConsoleKey.A: if (Dir.Length() != 2) { Dir = new Vector2(-2,  0); } return true;
+                    case ConsoleKey.UpArrow:    case ConsoleKey.W: if (Dir.Length() != 1) { Dir = new Vector2( 0, -1); } return true;
+                    case ConsoleKey.RightArrow: case ConsoleKey.D: if (Dir.Length() != 2) { Dir = new Vector2( 2,  0); } return true;
+                    case ConsoleKey.DownArrow:  case ConsoleKey.S: if (Dir.Length() != 1) { Dir = new Vector2( 0,  1); } return true;
                 }
             }
             return false;
         }
 
-        public float Mod(float a, float b) { return (a - b* (float) Math.Floor(a / b)); }
+        public static float Mod(float a, float b) { return (a - b* (float) Math.Floor(a / b)); }
 
-        public void DrawPiece(Vector2 v, ConsoleColor c)
+        public static void DrawPiece(Vector2 v, ConsoleColor c)
         {
             Console.ForegroundColor = c;
             Console.SetCursorPosition(Convert.ToInt16(v.X), Convert.ToInt16(v.Y));
